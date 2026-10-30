@@ -1,0 +1,30 @@
+name: 2-Hour Auto Live Stream
+
+on:
+  workflow_dispatch:
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 130
+
+    steps:
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Download Video from Drive
+        run: |
+          echo "Downloading livev.mp4 from Google Drive..."
+          curl -L "https://drive.usercontent.google.com/download?id=1ofU-7Uud9wtDHHa8-YDf2s-m1MWbDZD7&export=download&confirm=t" -o video.mp4
+          ls -lh video.mp4
+
+      - name: Stream Exactly 2 Hours to YouTube
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+        run: |
+          echo "Starting 2-Hour Live Stream..."
+          # 7200s = Theek 2 ghante chal kar stream khud ba khud band ho jayegi!
+          timeout 7200s ffmpeg -re -stream_loop -1 -i video.mp4 -c:v copy -c:a aac -b:a 128k -f flv "rtmp://a.rtmp.youtube.com/live2/$YOUTUBE_STREAM_KEY" || true
+          echo "2 Hours Completed. Stream stopped cleanly and successfully!"
